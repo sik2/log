@@ -1,7 +1,10 @@
+"use client";
+
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { useEffect, useState } from "react";
 
 // API 응답 데이터 타입 정의
 interface Post {
@@ -12,81 +15,97 @@ interface Post {
   content: string;
 }
 
-// API에서 특정 포스트 데이터를 가져오는 함수
-async function fetchPost(id: string): Promise<Post | null> {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts/${id}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // Next.js에서 캐시를 비활성화 (개발 환경에서)
-        cache: "no-store",
-      }
-    );
-
-    if (!response.ok) {
-      if (response.status === 404) {
-        return null;
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const post: Post = await response.json();
-    return post;
-  } catch (error) {
-    console.error("포스트 데이터를 가져오는 중 오류 발생:", error);
-    return null;
-  }
-}
-
-// 모든 포스트 목록을 가져오는 함수 (이전/다음 글 네비게이션용)
-async function fetchAllPosts(): Promise<Post[]> {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        cache: "no-store",
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const posts: Post[] = await response.json();
-    return posts;
-  } catch (error) {
-    console.error("포스트 목록을 가져오는 중 오류 발생:", error);
-    return [];
-  }
-}
-
 interface PostPageProps {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }
 
-export default async function PostPage({ params }: PostPageProps) {
-  const { id } = await params;
+export default function PostPage({ params }: PostPageProps) {
+  const { id } = params;
+  const [post, setPost] = useState<Post | null>(null);
+  const [allPosts, setAllPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  if (["new", "write", "edit", "update"].includes(id)) {
-    notFound();
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        // 특정 포스트 데이터 가져오기
+        const postResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts/${id}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (!postResponse.ok) {
+          if (postResponse.status === 404) {
+            setError(true);
+            return;
+          }
+          throw new Error(`HTTP error! status: ${postResponse.status}`);
+        }
+
+        const postData: Post = await postResponse.json();
+        setPost(postData);
+
+        // 모든 포스트 목록 가져오기 (이전/다음 글 네비게이션용)
+        const allPostsResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (allPostsResponse.ok) {
+          const allPostsData: Post[] = await allPostsResponse.json();
+          setAllPosts(allPostsData);
+        }
+      } catch (error) {
+        console.error("데이터를 가져오는 중 오류 발생:", error);
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (["new", "write", "edit", "update"].includes(id)) {
+      setError(true);
+      return;
+    }
+
+    fetchData();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-6">
+          <div className="max-w-3xl mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-muted rounded mb-4"></div>
+              <div className="h-4 bg-muted rounded mb-2"></div>
+              <div className="h-64 bg-muted rounded"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
-  const post = await fetchPost(id);
-
-  if (!post) {
+  if (error || !post) {
     notFound();
   }
 
   // 이전/다음 글 찾기
-  const allPosts = await fetchAllPosts();
   const currentIndex = allPosts.findIndex((p) => p.id.toString() === id);
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost =
@@ -228,33 +247,4 @@ export default async function PostPage({ params }: PostPageProps) {
       </main>
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  try {
-    const response = await fetch("http://localhost:8080/api/v1/posts", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return [];
-    }
-
-    const posts: Post[] = await response.json();
-    return posts
-      .filter(
-        (post) =>
-          !["new", "write", "edit", "update"].includes(post.id.toString())
-      )
-      .map((post) => ({
-        id: post.id.toString(),
-      }));
-  } catch (error) {
-    console.error("Static params 생성 중 오류 발생:", error);
-    return [];
-  }
 }
