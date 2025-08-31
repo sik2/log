@@ -14,7 +14,7 @@ interface PostCardProps {
 
 export function PostCard({ post }: PostCardProps) {
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow flex flex-col h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-xs text-muted-foreground">{post.date}</span>
@@ -25,16 +25,18 @@ export function PostCard({ post }: PostCardProps) {
           </h3>
         </Link>
       </CardHeader>
-      <CardContent className="pt-0">
-        <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+      <CardContent className="pt-0 flex-1 flex flex-col">
+        <p className="text-muted-foreground text-sm leading-relaxed mb-4 flex-1">
           {post.excerpt}
         </p>
-        <Link
-          href={`/posts/${post.id}`}
-          className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
-        >
-          더 읽기 →
-        </Link>
+        <div className="flex justify-end">
+          <Link
+            href={`/posts/${post.id}`}
+            className="text-sm text-primary hover:text-primary/80 transition-colors font-medium"
+          >
+            더 읽기 →
+          </Link>
+        </div>
       </CardContent>
     </Card>
   );
