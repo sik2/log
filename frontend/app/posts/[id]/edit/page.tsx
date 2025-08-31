@@ -5,65 +5,121 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Eye, Save, Send } from "lucide-react";
+import { ArrowLeft, Save, Send } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
-const samplePosts = [
-  {
-    id: "1",
-    title: "Next.js 15의 새로운 기능들",
-    content: "Next.js 15가 출시되면서 많은 새로운 기능들이 추가되었습니다...",
-    date: "2024-01-15",
-  },
-  {
-    id: "2",
-    title: "TypeScript와 함께하는 현대적 웹 개발",
-    content: "TypeScript는 현대 웹 개발에서 필수적인 도구가 되었습니다...",
-    date: "2024-01-10",
-  },
-];
-
-export default function EditPage({ params }: { params: { id: string } }) {
+export default function EditPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [isPreview, setIsPreview] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const post = samplePosts.find((p) => p.id === params.id);
-
+  // 게시글 데이터 로드
   useEffect(() => {
-    if (!post) {
-      notFound();
-    }
+    const fetchPost = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts/${id}`,
+          {
+            method: "GET",
+            mode: "cors",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
-    setTitle(post.title);
-    setContent(post.content);
-    setIsLoading(false);
-  }, [post]);
+        if (response.ok) {
+          const postData = await response.json();
+          setTitle(postData.title || "");
+          setContent(postData.content || "");
+        } else if (response.status === 404) {
+          notFound();
+        } else {
+          alert("게시글을 불러오는데 실패했습니다.");
+        }
+      } catch (error) {
+        console.error("게시글 로드 오류:", error);
+        alert("게시글을 불러오는 중 오류가 발생했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPost();
+  }, [id]);
 
   const handleSave = () => {
-    // TODO: 저장 로직 구현
-    console.log("저장:", { id: params.id, title, content });
+    // TODO: 임시 저장 로직 구현
+    alert("준비중 입니다.");
+    console.log("임시 저장:", { id, title, content });
   };
 
-  const handleUpdate = () => {
-    // TODO: 업데이트 로직 구현
-    console.log("업데이트:", { id: params.id, title, content });
-  };
+  const handleUpdate = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
 
-  const formatContent = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/\n/g, "<br>");
+    setIsUpdating(true);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts/${id}`,
+        {
+          method: "PUT",
+          mode: "cors",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: title.trim(),
+            content: content.trim(),
+          }),
+        }
+      );
+
+      if (response.ok) {
+        alert("게시글이 성공적으로 수정되었습니다!");
+        // 게시글 상세 페이지로 이동
+        window.location.href = `/posts/${id}`;
+      } else {
+        const errorData = await response.json();
+        alert(
+          `게시글 수정에 실패했습니다: ${
+            errorData.message || "알 수 없는 오류"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("게시글 수정 오류:", error);
+      alert("게시글 수정 중 오류가 발생했습니다.");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        로딩 중...
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="container mx-auto px-4 py-8">
+          <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">게시글을 불러오는 중...</p>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -77,7 +133,7 @@ export default function EditPage({ params }: { params: { id: string } }) {
         <section className="max-w-6xl mx-auto mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link href={`/posts/${params.id}`}>
+              <Link href={`/posts/${id}`}>
                 <Button variant="ghost" size="sm">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   글로 돌아가기
@@ -88,21 +144,13 @@ export default function EditPage({ params }: { params: { id: string } }) {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsPreview(!isPreview)}
-              >
-                <Eye className="w-4 h-4 mr-2" />
-                {isPreview ? "편집" : "미리보기"}
-              </Button>
               <Button variant="outline" size="sm" onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" />
                 임시저장
               </Button>
-              <Button size="sm" onClick={handleUpdate}>
+              <Button size="sm" onClick={handleUpdate} disabled={isUpdating}>
                 <Send className="w-4 h-4 mr-2" />
-                업데이트
+                {isUpdating ? "수정 중..." : "업데이트"}
               </Button>
             </div>
           </div>
@@ -123,10 +171,34 @@ export default function EditPage({ params }: { params: { id: string } }) {
                   className="text-base"
                 />
                 <Textarea
-                  placeholder="내용을 입력하세요..."
+                  placeholder={`내용을 입력하세요...
+
+# 제목 1
+## 제목 2
+
+**굵은 글씨**
+*기울임 글씨*
+~~취소선~~
+
+- 목록 항목 1
+- 목록 항목 2
+
+1. 번호 목록 1
+2. 번호 목록 2
+
+\`\`\`코드 블록\`\`\`
+\`인라인 코드\`
+
+[링크](https://example.com)
+
+| 테이블 | 헤더 |
+|--------|------|
+| 셀1    | 셀2  |
+
+> 인용문`}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[400px] resize-none"
+                  className="min-h-[400px] resize-none font-mono"
                 />
               </CardContent>
             </Card>
@@ -143,14 +215,17 @@ export default function EditPage({ params }: { params: { id: string } }) {
                   <div className="text-sm text-muted-foreground">
                     {new Date().toLocaleDateString("ko-KR")}
                   </div>
-                  <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: content
-                        ? formatContent(content)
-                        : '<p class="text-muted-foreground">내용을 입력하면 여기에 미리보기가 표시됩니다.</p>',
-                    }}
-                  />
+                  <div className="markdown">
+                    {content ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        내용을 입력하면 여기에 미리보기가 표시됩니다.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>

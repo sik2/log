@@ -3,82 +3,70 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-// 임시 데이터 - 실제로는 CMS나 마크다운 파일에서 가져올 예정
-const samplePosts = [
-  {
-    id: "1",
-    title: "새로운 블로그를 시작하며",
-    content: `
-# 새로운 시작
+// API 응답 데이터 타입 정의
+interface Post {
+  id: number;
+  createdDate: string;
+  modifiedDate: string;
+  title: string;
+  content: string;
+}
 
-개인적인 생각과 일상의 기록을 정리하기 위해 새로운 블로그를 시작하게 되었습니다. 
+// API에서 특정 포스트 데이터를 가져오는 함수
+async function fetchPost(id: string): Promise<Post | null> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts/${id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // Next.js에서 캐시를 비활성화 (개발 환경에서)
+        cache: "no-store",
+      }
+    );
 
-## 블로그를 시작하는 이유
+    if (!response.ok) {
+      if (response.status === 404) {
+        return null;
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-오랫동안 머릿속에만 맴돌던 생각들을 글로 정리하고 싶었습니다. 개발을 하면서 배운 것들, 일상에서 느낀 소소한 감정들, 그리고 미래에 대한 계획들을 이곳에 차근차근 기록해보려고 합니다.
+    const post: Post = await response.json();
+    return post;
+  } catch (error) {
+    console.error("포스트 데이터를 가져오는 중 오류 발생:", error);
+    return null;
+  }
+}
 
-## 앞으로의 계획
+// 모든 포스트 목록을 가져오는 함수 (이전/다음 글 네비게이션용)
+async function fetchAllPosts(): Promise<Post[]> {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        cache: "no-store",
+      }
+    );
 
-- 개발 관련 학습 내용 정리
-- 일상의 소소한 이야기들
-- 책을 읽고 느낀 점들
-- 여행과 새로운 경험들
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-앞으로 이곳에서 다양한 이야기들을 나누고 싶습니다. 혹시 이 글을 읽고 계신다면, 언제든 편하게 소통해주세요!
-    `,
-    date: "2024년 1월 15일",
-  },
-  {
-    id: "2",
-    title: "Next.js 15와 함께하는 개발 여정",
-    content: `
-# Next.js 15의 새로운 기능들
-
-Next.js 15가 출시되면서 많은 개선사항들이 추가되었습니다. 실제 프로젝트에 적용해본 경험을 공유해보겠습니다.
-
-## 주요 개선사항
-
-### 1. App Router의 안정화
-App Router가 더욱 안정화되었고, 성능도 크게 향상되었습니다. 특히 서버 컴포넌트와 클라이언트 컴포넌트 간의 경계가 더욱 명확해졌습니다.
-
-### 2. 향상된 개발 경험
-- 더 빠른 Hot Reload
-- 개선된 에러 메시지
-- 향상된 TypeScript 지원
-
-## 실제 적용 경험
-
-이번 블로그 프로젝트에서도 Next.js 15를 사용했는데, 개발 경험이 정말 좋았습니다. 특히 새로운 라우팅 시스템이 직관적이고 사용하기 편했습니다.
-
-앞으로도 Next.js의 발전이 기대됩니다!
-    `,
-    date: "2024년 1월 12일",
-  },
-  {
-    id: "3",
-    title: "미니멀한 디자인에 대한 생각",
-    content: `
-# 단순함의 힘
-
-복잡함 속에서 단순함을 찾는 것의 중요성에 대해 생각해봅니다.
-
-## 미니멀리즘은란?
-
-미니멀리즘은 단순히 '적게 가지는 것'이 아닙니다. 정말 중요한 것에 집중하기 위해 불필요한 것들을 제거하는 철학입니다.
-
-## 디자인에서의 미니멀리즘
-
-- **여백의 활용**: 여백은 비어있는 공간이 아니라 시각적 휴식을 제공하는 중요한 요소
-- **색상의 절제**: 너무 많은 색상보다는 조화로운 몇 가지 색상으로 통일감 연출
-- **타이포그래피**: 읽기 쉽고 명확한 폰트 선택
-
-## 삶에서의 미니멀리즘
-
-디자인뿐만 아니라 삶의 여러 영역에서도 미니멀리즘의 가치를 느낄 수 있습니다. 정말 필요한 것들에 집중할 때 더 큰 만족감을 얻을 수 있다고 생각합니다.
-    `,
-    date: "2024년 1월 10일",
-  },
-];
+    const posts: Post[] = await response.json();
+    return posts;
+  } catch (error) {
+    console.error("포스트 목록을 가져오는 중 오류 발생:", error);
+    return [];
+  }
+}
 
 interface PostPageProps {
   params: Promise<{ id: string }>;
@@ -91,19 +79,28 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound();
   }
 
-  const post = samplePosts.find((p) => p.id === id);
+  const post = await fetchPost(id);
 
   if (!post) {
     notFound();
   }
 
   // 이전/다음 글 찾기
-  const currentIndex = samplePosts.findIndex((p) => p.id === id);
-  const prevPost = currentIndex > 0 ? samplePosts[currentIndex - 1] : null;
+  const allPosts = await fetchAllPosts();
+  const currentIndex = allPosts.findIndex((p) => p.id.toString() === id);
+  const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost =
-    currentIndex < samplePosts.length - 1
-      ? samplePosts[currentIndex + 1]
-      : null;
+    currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
+
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -130,7 +127,9 @@ export default async function PostPage({ params }: PostPageProps) {
               {post.title}
             </h1>
             <div className="flex items-center text-sm text-muted-foreground">
-              <time dateTime={post.date}>{post.date}</time>
+              <time dateTime={post.createdDate}>
+                {formatDate(post.createdDate)}
+              </time>
             </div>
           </header>
 
@@ -232,9 +231,30 @@ export default async function PostPage({ params }: PostPageProps) {
 }
 
 export async function generateStaticParams() {
-  return samplePosts
-    .filter((post) => !["new", "write", "edit", "update"].includes(post.id))
-    .map((post) => ({
-      id: post.id,
-    }));
+  try {
+    const response = await fetch("http://localhost:8080/api/v1/posts", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return [];
+    }
+
+    const posts: Post[] = await response.json();
+    return posts
+      .filter(
+        (post) =>
+          !["new", "write", "edit", "update"].includes(post.id.toString())
+      )
+      .map((post) => ({
+        id: post.id.toString(),
+      }));
+  } catch (error) {
+    console.error("Static params 생성 중 오류 발생:", error);
+    return [];
+  }
 }

@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Eye, Save, Send } from "lucide-react";
+import { ArrowLeft, Save, Send } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export default function WritePage() {
   const [title, setTitle] = useState("");
@@ -16,19 +18,45 @@ export default function WritePage() {
 
   const handleSave = () => {
     // TODO: 임시 저장 로직 구현
+    alert("준비중 입니다.");
     console.log("임시 저장:", { title, content });
   };
 
-  const handlePublish = () => {
-    // TODO: 발행 로직 구현
-    console.log("발행:", { title, content });
-  };
+  const handlePublish = async () => {
+    if (!title.trim() || !content.trim()) {
+      alert("제목과 내용을 모두 입력해주세요.");
+      return;
+    }
 
-  const formatContent = (text: string) => {
-    return text
-      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.*?)\*/g, "<em>$1</em>")
-      .replace(/\n/g, "<br>");
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/posts`, {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+        }),
+      });
+
+      if (response.ok) {
+        alert("게시글이 성공적으로 등록되었습니다!");
+        // 목록 페이지로 이동
+        window.location.href = "/posts";
+      } else {
+        const errorData = await response.json();
+        alert(
+          `게시글 등록에 실패했습니다: ${
+            errorData.message || "알 수 없는 오류"
+          }`
+        );
+      }
+    } catch (error) {
+      console.error("게시글 등록 오류:", error);
+      alert("게시글 등록 중 오류가 발생했습니다.");
+    }
   };
 
   return (
@@ -51,14 +79,14 @@ export default function WritePage() {
               </h1>
             </div>
             <div className="flex items-center gap-2">
-              <Button
+              {/* <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsPreview(!isPreview)}
               >
                 <Eye className="w-4 h-4 mr-2" />
                 {isPreview ? "편집" : "미리보기"}
-              </Button>
+              </Button> */}
               <Button variant="outline" size="sm" onClick={handleSave}>
                 <Save className="w-4 h-4 mr-2" />
                 임시저장
@@ -86,14 +114,34 @@ export default function WritePage() {
                   className="text-base"
                 />
                 <Textarea
-                  placeholder="내용을 입력하세요...
+                  placeholder={`내용을 입력하세요...
+
+# 제목 1
+## 제목 2
 
 **굵은 글씨**
 *기울임 글씨*
-일반 텍스트"
+~~취소선~~
+
+- 목록 항목 1
+- 목록 항목 2
+
+1. 번호 목록 1
+2. 번호 목록 2
+
+\`\`\`코드 블록\`\`\`
+\`인라인 코드\`
+
+[링크](https://example.com)
+
+| 테이블 | 헤더 |
+|--------|------|
+| 셀1    | 셀2  |
+
+> 인용문`}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  className="min-h-[400px] resize-none"
+                  className="min-h-[400px] resize-none font-mono"
                 />
               </CardContent>
             </Card>
@@ -110,14 +158,17 @@ export default function WritePage() {
                   <div className="text-sm text-muted-foreground">
                     {new Date().toLocaleDateString("ko-KR")}
                   </div>
-                  <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: content
-                        ? formatContent(content)
-                        : '<p class="text-muted-foreground">내용을 입력하면 여기에 미리보기가 표시됩니다.</p>',
-                    }}
-                  />
+                  <div className="markdown">
+                    {content ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        내용을 입력하면 여기에 미리보기가 표시됩니다.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
