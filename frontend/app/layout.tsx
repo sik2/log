@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import type React from "react";
 import { Suspense } from "react";
+import { LoadingPage } from "../components/LoadingSpinner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -25,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`font-sans ${dmSans.variable} ${GeistMono.variable}`}>
-        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+        <Suspense fallback={<LoadingPage />}>{children}</Suspense>
         <Analytics />
       </body>
     </html>
