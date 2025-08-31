@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export function BlogHeader() {
+export function Header() {
   return (
     <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -23,13 +23,13 @@ export function BlogHeader() {
               href="/posts"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              글 목록
+              기록들
             </Link>
             <Link
               href="/posts/new"
               className="px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              글쓰기
+              기록하기
             </Link>
           </div>
         </nav>

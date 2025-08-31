@@ -1,5 +1,5 @@
-import { BlogHeader } from "@/components/Header";
-import { BlogPostCard } from "@/components/PostCard";
+import { Header } from "@/components/Header";
+import { PostCard } from "@/components/PostCard";
 
 // 임시 데이터 - 실제로는 CMS나 마크다운 파일에서 가져올 예정
 const allPosts = [
@@ -50,7 +50,7 @@ const allPosts = [
 export default function PostsPage() {
   return (
     <div className="min-h-screen bg-background">
-      <BlogHeader />
+      <Header />
 
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}
@@ -67,7 +67,7 @@ export default function PostsPage() {
         <section>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {allPosts.map((post) => (
-              <BlogPostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         </section>

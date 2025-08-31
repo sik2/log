@@ -1,7 +1,7 @@
-import { BlogHeader } from "@/components/Header";
-import { BlogPostCard } from "@/components/PostCard";
+import { Header } from "@/components/Header";
+import { PostCard } from "@/components/PostCard";
 
-// 임시 데이터 - 실제로는 CMS나 마크다운 파일에서 가져올 예정
+// 임시 데이터
 const samplePosts = [
   {
     id: "1",
@@ -17,19 +17,12 @@ const samplePosts = [
       "Next.js 15의 새로운 기능들을 살펴보고, 실제 프로젝트에 적용해본 경험을 공유합니다. 특히 App Router의 개선사항들이 인상적이었습니다.",
     date: "2024년 1월 12일",
   },
-  {
-    id: "3",
-    title: "미니멀한 디자인에 대한 생각",
-    excerpt:
-      "복잡함 속에서 단순함을 찾는 것의 중요성에 대해 생각해봅니다. 디자인뿐만 아니라 삶의 여러 영역에서 미니멀리즘이 주는 가치를 탐구해봅니다.",
-    date: "2024년 1월 10일",
-  },
 ];
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <BlogHeader />
+      <Header />
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
@@ -53,12 +46,12 @@ export default function HomePage() {
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {samplePosts.map((post) => (
-              <BlogPostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} />
             ))}
           </div>
         </section>
 
-        {/* Newsletter Section */}
+        {/* Newsletter Section
         <section className="py-12">
           <div className="max-w-md mx-auto">
             <div className="bg-card border rounded-lg p-6 text-center">
@@ -80,7 +73,7 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </main>
 
       {/* Footer */}

@@ -1,10 +1,10 @@
-import { BlogHeader } from "@/components/Header";
+import { Header } from "@/components/Header";
 import Link from "next/link";
 
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-background">
-      <BlogHeader />
+      <Header />
 
       <main className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto text-center">

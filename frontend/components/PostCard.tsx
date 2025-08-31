@@ -1,18 +1,18 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import Link from "next/link";
 
-interface BlogPost {
+interface Post {
   id: string;
   title: string;
   excerpt: string;
   date: string;
 }
 
-interface BlogPostCardProps {
-  post: BlogPost;
+interface PostCardProps {
+  post: Post;
 }
 
-export function BlogPostCard({ post }: BlogPostCardProps) {
+export function PostCard({ post }: PostCardProps) {
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">

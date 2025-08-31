@@ -1,6 +1,6 @@
 "use client";
 
-import { BlogHeader } from "@/components/Header";
+import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ export default function WritePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <BlogHeader />
+      <Header />
 
       <main className="container mx-auto px-4 py-8">
         {/* Page Header */}

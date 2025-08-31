@@ -1,4 +1,4 @@
-import { BlogHeader } from "@/components/Header";
+import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -107,7 +107,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <BlogHeader />
+      <Header />
 
       <main className="container mx-auto px-4 py-6">
         <article className="max-w-3xl mx-auto">
